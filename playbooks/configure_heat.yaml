@@ -1,0 +1,182 @@
+#!/usr/bin/env ansible-playbook
+---
+# Configuring a heat template for automatically scaling instances
+# ansible-playbook -v -i `ir workspace inventory` configure_heat.yaml
+
+- hosts: undercloud
+  become: no
+  name: Using the heat service for autoscaling
+  tasks:
+
+    - name: Create the generic archive policy for autoscaling
+      shell: |
+        source ~/stackrc;
+        openstack metric archive-policy create generic \
+        --back-window 0 \
+        --definition timespan:'4:00:00',granularity:'0:01:00',points:240 \
+        --aggregation-method 'rate:mean' \
+        --aggregation-method 'mean';
+      register: result
+      failed_when: result.rc >= 1
+
+    - name: Verify that the archive policy was created
+      shell: |
+        source ~/stackrc;
+        openstack metric archive-policy show generic;
+      register: result
+      failed_when: result.rc >= 1
+
+    - name: Create "vnf" directory under templates
+      shell: |
+        mkdir -p $HOME/templates/autoscaling/vnf/
+
+    - name: Configure heat template for automatically scaling instances
+      copy:
+        dest: ~/templates/autoscaling/vnf/instance.yaml
+        content: |
+          heat_template_version: wallaby
+          description: Template to control scaling of VNF instance
+
+          parameters:
+            metadata:
+              type: json
+            image:
+              type: string
+              description: image used to create instance
+              default: workload_image_0
+            flavor:
+              type: string
+              description: instance flavor to be used
+              default: workload_flavor_0
+            key_name:
+              type: string
+              description: keypair to be used
+              default: workload_key_0
+            network:
+              type: string
+              description: project network to attach instance to
+              default: workload_internal_net_0 
+            external_network:
+              type: string
+              description: network used for floating IPs
+              default: public
+
+          resources:
+            vnf:
+              type: OS::Nova::Server
+              properties:
+                flavor: {get_param: flavor}
+                key_name: {get_param: key_name}
+                image: { get_param: image }
+                metadata: { get_param: metadata }
+                networks:
+                  - port: { get_resource: port }
+
+            port:
+              type: OS::Neutron::Port
+              properties:
+                network: {get_param: network}
+                security_groups:
+                  - workload_secgroup_0
+
+            floating_ip:
+              type: OS::Neutron::FloatingIP
+              properties:
+                floating_network: {get_param: external_network }
+
+            floating_ip_assoc:
+              type: OS::Neutron::FloatingIPAssociation
+              properties:
+                floatingip_id: { get_resource: floating_ip }
+
+    - name: Create the resource to reference in the heat template
+      copy:
+        dest: ~/templates/autoscaling/vnf/resources.yaml
+        content: |
+          resource_registry:
+            "OS::Nova::Server::VNF": $HOME/templates/autoscaling/vnf/instance.yaml
+
+    - name: Create the deployment template for heat to control instance scaling
+      copy:
+        dest: ~/templates/autoscaling/vnf/template.yaml
+        content: |
+          heat_template_version: wallaby
+          description:  Example auto scale group, policy and alarm
+          resources:
+            scaleup_group:
+              type: OS::Heat::AutoScalingGroup
+              properties:
+                max_size: 3
+                min_size: 1
+                #desired_capacity: 1
+                resource:
+                  type: OS::Nova::Server::VNF
+                  properties:
+                    metadata: {"metering.server_group": {get_param: "OS::stack_id"}}
+
+            scaleup_policy:
+              type: OS::Heat::ScalingPolicy
+              properties:
+                adjustment_type: change_in_capacity
+                auto_scaling_group_id: { get_resource: scaleup_group }
+                cooldown: 60
+                scaling_adjustment: 1
+
+            scaledown_policy:
+              type: OS::Heat::ScalingPolicy
+              properties:
+                adjustment_type: change_in_capacity
+                auto_scaling_group_id: { get_resource: scaleup_group }
+                cooldown: 60
+                scaling_adjustment: -1
+
+            cpu_alarm_high:
+              type: OS::Aodh::GnocchiAggregationByResourcesAlarm
+              properties:
+                description: Scale up instance if CPU > 50%
+                metric: cpu
+                aggregation_method: rate:mean
+                granularity: 60
+                evaluation_periods: 3
+                threshold: 60000000000.0
+                resource_type: instance
+                comparison_operator: gt
+                alarm_actions:
+                  - str_replace:
+                      template: trust+url
+                      params:
+                        url: {get_attr: [scaleup_policy, signal_url]}
+                query:
+                  list_join:
+                    - ''
+                    - - {'=': {server_group: {get_param: "OS::stack_id"}}}
+
+            cpu_alarm_low:
+              type: OS::Aodh::GnocchiAggregationByResourcesAlarm
+              properties:
+                description: Scale down instance if CPU < 20%
+                metric: cpu
+                aggregation_method: rate:mean
+                granularity: 60
+                evaluation_periods: 3
+                threshold: 24000000000.0
+                resource_type: instance
+                comparison_operator: lt
+                alarm_actions:
+                  - str_replace:
+                      template: trust+url
+                      params:
+                        url: {get_attr: [scaledown_policy, signal_url]}
+                query:
+                  list_join:
+                    - ''
+                    - - {'=': {server_group: {get_param: "OS::stack_id"}}}
+
+          outputs:
+            scaleup_policy_signal_url:
+              value: {get_attr: [scaleup_policy, alarm_url]}
+
+            scaledown_policy_signal_url:
+              value: {get_attr: [scaledown_policy, alarm_url]}
+
+...
