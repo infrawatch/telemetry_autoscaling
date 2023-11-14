@@ -8,6 +8,17 @@
   name: Using the heat service for autoscaling
   tasks:
 
+    - name: Create the generic archive policy for autoscaling
+      shell: |
+        source ~/stackrc;
+        openstack metric archive-policy create generic \
+        --back-window 0 \
+        --definition timespan:'4:00:00',granularity:'0:01:00',points:240 \
+        --aggregation-method 'rate:mean' \
+        --aggregation-method 'mean';
+      register: result
+      failed_when: result.rc >= 1
+
     - name: Verify that the archive policy was created
       shell: |
         source ~/stackrc;
