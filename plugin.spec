@@ -13,6 +13,16 @@ subparsers:
                       help: |
                           Verify overcloud deployment for autoscaling
                       default: true
+                  ospversion:
+                      type: Value
+                      help: |
+                          The product version
+                          Numbers are for OSP releases
+                          Names are for RDO releases
+                          If not given, same version of the undercloud will be used
+                      choices:
+                        - "17.1"
+                        - "18.0"
 
             - title: Configure
               options:
