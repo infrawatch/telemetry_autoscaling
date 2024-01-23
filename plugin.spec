@@ -12,7 +12,7 @@ subparsers:
                       type: Bool
                       help: |
                           Verify overcloud deployment for autoscaling
-                      default: true
+                      default: false
                   ospversion:
                       type: Value
                       help: |
@@ -30,7 +30,7 @@ subparsers:
                       type: Bool
                       help: |
                           Configure heat service for autoscaling
-                      default: true
+                      default: false
 
             - title: Create
               options:
@@ -38,7 +38,7 @@ subparsers:
                       type: Bool
                       help: |
                           Create the stack
-                      default: true
+                      default: false
 
             - title: Validate
               options:
@@ -46,11 +46,11 @@ subparsers:
                       type: Bool
                       help: |
                           Testing automatic scaling up of instances
-                      default: true
+                      default: false
 
                   test_autoscale_down:
                       type: Bool
                       help: |
                           Testing automatic scaling down of instances
-                      default: true
+                      default: false
 
