@@ -3,7 +3,6 @@
   import_playbook:
     "{{ verify_autoscaling | default('playbooks/verify_autoscaling.yaml') }}"
   when:
-    - test.verify.autoscaling|default('')
     - test.ospversion is defined
     - test.ospversion >= "17.1"
 
@@ -11,7 +10,6 @@
   import_playbook:
     "{{ configure_heat | default('playbooks/configure_heat.yaml') }}"
   when:
-    - test.configure.heat|default('')
     - test.ospversion is defined
     - test.ospversion >= "17.1"
 
@@ -19,7 +17,6 @@
   import_playbook:
     "{{ create_stack | default('playbooks/creating_stack.yaml') }}"
   when:
-    - test.create.stack|default('')
     - test.ospversion is defined
     - test.ospversion >= "17.1"
 
@@ -27,7 +24,6 @@
   import_playbook:
     "{{ test_autoscale_up | default('playbooks/test_autoscaling_up.yaml') }}"
   when:
-    - test.test.autoscale.up|default('')
     - test.ospversion is defined
     - test.ospversion >= "17.1"
 
@@ -35,7 +31,6 @@
   import_playbook:
     "{{ test_autoscale_down | default('playbooks/test_autoscaling_down.yaml') }}"
   when:
-    - test.test.autoscale.down|default('')
     - test.ospversion is defined
     - test.ospversion >= "17.1"
 
