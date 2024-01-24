@@ -1,10 +1,18 @@
 # Autoscaling
 
 ## Getting started
+    Overcloud deployment with autoscaling
+        Configure
+        Deploy the overcloud for autoscaling
+        Verify the deployment
+    Using the heat service for autoscaling
+        Create the archive policy defined
+        Configuring a heat template for automatically scaling instances
+        Creating the stack deployment
+    Testing and troubleshooting autoscaling
+        Testing automatic scaling up of instances
+        Testing automatic scaling down of instances
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
 
 ## Add your files
 
