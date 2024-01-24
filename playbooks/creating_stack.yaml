@@ -8,6 +8,16 @@
   name: Creating the stack deployment for autoscaling
   tasks:
 
+    - name: Create the stack
+      shell: |
+        source ~/overcloudrc;
+        openstack stack create \
+        -t $HOME/templates/autoscaling/vnf/template.yaml \
+        -e $HOME/templates/autoscaling/vnf/resources.yaml \
+        vnf;
+      register: result
+      failed_when: result.rc >= 1
+
     - name: Verify that the stack was created successfully
       shell: |
         source ~/overcloudrc;
