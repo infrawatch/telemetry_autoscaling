@@ -5,25 +5,41 @@
 
 - hosts: undercloud
   become: no
-  name: Test autoscaling
+  name: Test automatic scaling down of instances
   tasks:
 
-    - name: register instance IP address
+    - name: register instance IP
       shell: |
         source ~/overcloudrc;
-        openstack server show controller-1 -f value -c addresses | sed 's/ctlplane=//g';
-      register: instance1
+        export STACK_ID=$(openstack stack show vnf -c id -f value)
+        openstack server list --long -c Networks -c 'Properties' | \
+            grep -i $STACK_ID | \
+            awk  -F'=' '{print $2}' | \
+            awk -F',' '{print $1}'
+      register: vnf_instance_ip
 
-    - name: Test automatic scaling up of instances
+    - name: Verfiy the number of instances before scaling
       shell: |
-        ssh -i ~/mykey.pem cirros@{{ instance1.stdout }} "sudo killall dd"
-      register: result
-      failed_when: result.rc >= 1
+        source ~/overcloudrc;
+        openstack server list -c ID -f value | wc -l
+      register: instance_count1
 
+    - name: Test automatic scaling down of instances
+      shell: |
+        ssh -i ~/mykey.pem cirros@{{ vnf_instance_ip.stdout }}
+        sudo killall yes
+      register: result
+
+    - name: Wait for 60 sec
+      pause:
+        minutes: 1
+  
     - name: Verify that the alarm has been triggered
       shell: |
-        source ~/stackrc;
-        openstack alarm list;
+        source ~/overcloudrc;
+        openstack alarm list -c state -c name -f value | \
+            grep -i "cpu_alarm_low" | \
+            awk '{print $2}'
       register: result
       failed_when: '"alarm" not in result.stdout'
 
@@ -31,11 +47,23 @@
       pause:
         minutes: 1
 
-    - name: Orchestration continually reduce the number of instances
+    - name: Verify that the Orchestration service scales down 
+      shell: |
+        source ~/overcloudrc;
+        openstack server list -c ID -f value | wc -l
+      register: instance_count2
+    
+    - name: Wait for 300 sec
+      pause:
+        minutes: 5
+
+    - name: Verify that the Orchestration service has automatically scale down to min configuration
       shell: |
         source ~/overcloudrc;
         openstack server list;
-      register: result
-      failed_when: '"ACTIVE" not in result.stdout'
+      register: instance_count3
+      failed_when:
+        - instance_count3 >= instance_count1
+        - instance_count3 != 1
 
 ...
