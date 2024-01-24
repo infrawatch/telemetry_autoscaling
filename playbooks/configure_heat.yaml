@@ -10,7 +10,7 @@
 
     - name: Create the generic archive policy for autoscaling
       shell: |
-        source ~/stackrc;
+        source ~/overcloudrc;
         openstack metric archive-policy create generic \
         --back-window 0 \
         --definition timespan:'4:00:00',granularity:'0:01:00',points:240 \
@@ -21,7 +21,7 @@
 
     - name: Verify that the archive policy was created
       shell: |
-        source ~/stackrc;
+        source ~/overcloudrc;
         openstack metric archive-policy show generic;
       register: result
       failed_when: result.rc >= 1
@@ -106,7 +106,7 @@
             scaleup_group:
               type: OS::Heat::AutoScalingGroup
               properties:
-                max_size: 3
+                max_size: 5
                 min_size: 1
                 #desired_capacity: 1
                 resource:
@@ -137,8 +137,8 @@
                 metric: cpu
                 aggregation_method: rate:mean
                 granularity: 60
-                evaluation_periods: 3
-                threshold: 60000000000.0
+                evaluation_periods: 1
+                threshold: 30000000000.0
                 resource_type: instance
                 comparison_operator: gt
                 alarm_actions:
@@ -158,8 +158,8 @@
                 metric: cpu
                 aggregation_method: rate:mean
                 granularity: 60
-                evaluation_periods: 3
-                threshold: 24000000000.0
+                evaluation_periods: 1
+                threshold: 12000000000.0
                 resource_type: instance
                 comparison_operator: lt
                 alarm_actions:
