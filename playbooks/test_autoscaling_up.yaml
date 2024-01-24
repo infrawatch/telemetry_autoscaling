@@ -41,7 +41,7 @@
       shell: |
         source ~/overcloudrc;
         openstack alarm list -c state -c name -f value | \
-            grep -i "cpu_alarm_low" | \
+            grep -i "cpu_alarm_high" | \
             awk '{print $2}'
       register: result
       failed_when: '"alarm" not in result.stdout'
