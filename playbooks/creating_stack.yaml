@@ -18,6 +18,10 @@
       register: result
       failed_when: result.rc >= 1
 
+    - name: Wait for 60 sec
+      pause:
+        minutes: 1
+
     - name: Verify that the stack was created successfully
       shell: |
         source ~/overcloudrc;
