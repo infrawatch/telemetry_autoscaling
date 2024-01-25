@@ -20,16 +20,9 @@
     - test.ospversion is defined
     - test.ospversion >= "17.1"
 
-- name: Testing automatic scaling up of instances
+- name: Testing automatic scaling of instances
   import_playbook:
-    "{{ test_autoscale_up | default('playbooks/test_autoscaling_up.yaml') }}"
-  when:
-    - test.ospversion is defined
-    - test.ospversion >= "17.1"
-
-- name: Testing automatic scaling down of instances
-  import_playbook:
-    "{{ test_autoscale_down | default('playbooks/test_autoscaling_down.yaml') }}"
+    "{{ test_autoscaling | default('playbooks/test_autoscaling.yaml') }}"
   when:
     - test.ospversion is defined
     - test.ospversion >= "17.1"
