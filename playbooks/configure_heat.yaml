@@ -108,7 +108,7 @@
               type: OS::Heat::AutoScalingGroup
               properties:
                 max_size: 5
-                min_size: 1
+                min_size: 3
                 #desired_capacity: 1
                 resource:
                   type: OS::Nova::Server::VNF
