@@ -42,15 +42,9 @@ subparsers:
 
             - title: Validate
               options:
-                  test_autoscale_up:
+                  test_autoscaling:
                       type: Bool
                       help: |
                           Testing automatic scaling up of instances
-                      default: false
-
-                  test_autoscale_down:
-                      type: Bool
-                      help: |
-                          Testing automatic scaling down of instances
                       default: false
 
