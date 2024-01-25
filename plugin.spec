@@ -45,6 +45,6 @@ subparsers:
                   test_autoscaling:
                       type: Bool
                       help: |
-                          Testing automatic scaling up of instances
+                          Testing automatic scaling of instances
                       default: false
 
