@@ -33,8 +33,7 @@
 
     - name: Test automatic scaling up of instances
       shell: |
-        ssh -i ~/mykey.pem cirros@{{ vnf_instance_ip.stdout }}
-        yes > /dev/null &
+        sshpass -p gocubsgo ssh cirros@{{ vnf_instance_ip.stdout }} "sudo yes > /dev/null &"
       register: result
 
     - name: Wait for 60 sec
