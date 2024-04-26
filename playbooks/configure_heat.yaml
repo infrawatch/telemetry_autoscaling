@@ -6,12 +6,15 @@
 - hosts: undercloud
   become: no
   name: Using the heat service for autoscaling
+  vars:
+    openstack_cmd: "{{ openstack_cmd if openstack_cmd is defined else 'openstack' }}"
+    stack_name: "{{ stack_name if stack_name is defined else 'vnf' }}"
   tasks:
 
     - name: Create the generic archive policy for autoscaling
       shell: |
         source ~/overcloudrc;
-        openstack metric archive-policy create generic \
+        {{ openstack_cmd }} metric archive-policy create generic \
         --back-window 0 \
         --definition timespan:'4:00:00',granularity:'0:01:00',points:240 \
         --aggregation-method 'rate:mean' \
@@ -22,7 +25,7 @@
     - name: Verify that the archive policy was created
       shell: |
         source ~/overcloudrc;
-        openstack metric archive-policy show generic;
+        {{ openstack_cmd }} metric archive-policy show generic;
       register: result
       failed_when: result.rc >= 1
 

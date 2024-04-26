@@ -6,26 +6,29 @@
 - hosts: undercloud
   become: no
   name: Verifying the overcloud deployment for autoscaling
+  vars:
+    openstack_cmd: "{{ openstack_cmd if openstack_cmd is defined else 'openstack' }}"
+    stack_name: "{{ stack_name if stack_name is defined else 'vnf' }}"
   tasks:
 
     - name: test service API endpoint(metric) for autoscaling
       shell: |
         source ~/stackrc;
-        openstack endpoint list --service metric;
+        {{ openstack_cmd }} endpoint list --service metric;
       register: result
       failed_when: result.rc >= 1
 
     - name: test service API endpoint(alarm) for autoscaling
       shell: |
         source ~/stackrc;
-        openstack endpoint list --service alarming;
+        {{ openstack_cmd }} endpoint list --service alarming;
       register: result
       failed_when: result.rc >= 1
 
     - name: test service API endpoint(heat) for autoscaling
       shell: |
         source ~/overcloudrc;
-        openstack endpoint list --service orchestration;
+        {{ openstack_cmd }} endpoint list --service orchestration;
       register: result
       failed_when: result.rc >= 1
 
@@ -39,7 +42,7 @@
     - name: Verify that the time-series database service is available
       shell: |
         source ~/overcloudrc;
-        openstack metric status --fit-width;
+        {{ openstack_cmd }} metric status --fit-width;
       register: result
       failed_when: result.rc >= 1
 ...

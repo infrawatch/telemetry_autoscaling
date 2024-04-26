@@ -6,13 +6,16 @@
 - hosts: undercloud
   become: no
   name: Test automatic scaling of instances
+  vars:
+    openstack_cmd: "{{ openstack_cmd if openstack_cmd is defined else 'openstack' }}"
+    stack_name: "{{ stack_name if stack_name is defined else 'vnf' }}"
   tasks:
 
     - name: register instance IP
       shell: |
         source ~/overcloudrc;
-        export STACK_ID=$(openstack stack show vnf -c id -f value)
-        openstack server list --long -c Networks -c 'Properties' | \
+        export STACK_ID=$({{ openstack_cmd }} stack show {{ stack_name }} -c id -f value)
+        {{ openstack_cmd }} server list --long -c Networks -c 'Properties' | \
             grep -i $STACK_ID | \
             awk  -F'=' '{print $2}' | \
             awk -F',' '{print $1}'
@@ -21,7 +24,7 @@
     - name: Verfiy the number of instances before scaling
       shell: |
         source ~/overcloudrc;
-        openstack server list --long|grep -i metering.server_group |wc -l
+        {{ openstack_cmd }} server list --long|grep -i metering.server_group |wc -l
       register: instance_count1
 
     - name: Test automatic scaling up of instances
@@ -32,7 +35,7 @@
     - name: Verify that the alarm has been triggered
       shell: |
         source ~/overcloudrc;
-        openstack alarm list -c state -c name -f value| \
+        {{ openstack_cmd }} alarm list -c state -c name -f value| \
             grep -i "cpu_alarm_high" | \
             awk '{print $2}'
       retries: 100
@@ -43,7 +46,7 @@
     - name: Verify that the Orchestration service has scaled up the instances 
       shell: |
         source ~/overcloudrc;
-        openstack server list --long|grep -i metering.server_group |wc -l
+        {{ openstack_cmd }} server list --long|grep -i metering.server_group | wc -l
       retries: 100
       delay: 5
       register: instance_count2
@@ -56,7 +59,7 @@
     - name: Verify that the alarm has been triggered
       shell: |
         source ~/overcloudrc;
-        openstack alarm list -c state -c name -f value| \
+        {{ openstack_cmd }} alarm list -c state -c name -f value| \
             grep -i "cpu_alarm_low" | \
             awk '{print $2}'
       retries: 100
@@ -67,7 +70,7 @@
     - name: Verify that the Orchestration service has scaled down the instances
       shell: |
         source ~/overcloudrc;
-        openstack server list --long|grep -i metering.server_group |wc -l
+        {{ openstack_cmd }} server list --long|grep -i metering.server_group |wc -l
       retries: 100
       delay: 5
       register: instance_count3
