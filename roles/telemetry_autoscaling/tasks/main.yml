@@ -1,0 +1,7 @@
+---
+# tasks file for telemetry_autoscaling
+- include_tasks: verify_autoscaling.yml
+- include_tasks: configure_heat.yml
+- include_tasks: creating_stack.yml
+- include_tasks: test_autoscaling.yml
+
