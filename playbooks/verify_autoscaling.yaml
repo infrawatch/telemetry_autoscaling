@@ -6,43 +6,8 @@
 - hosts: undercloud
   become: no
   name: Verifying the overcloud deployment for autoscaling
-  vars:
-    openstack_cmd: "{{ openstack_cmd if openstack_cmd is defined else 'openstack' }}"
-    stack_name: "{{ stack_name if stack_name is defined else 'vnf' }}"
   tasks:
-
-    - name: test service API endpoint(metric) for autoscaling
-      shell: |
-        source ~/stackrc;
-        {{ openstack_cmd }} endpoint list --service metric;
-      register: result
-      failed_when: result.rc >= 1
-
-    - name: test service API endpoint(alarm) for autoscaling
-      shell: |
-        source ~/stackrc;
-        {{ openstack_cmd }} endpoint list --service alarming;
-      register: result
-      failed_when: result.rc >= 1
-
-    - name: test service API endpoint(heat) for autoscaling
-      shell: |
-        source ~/overcloudrc;
-        {{ openstack_cmd }} endpoint list --service orchestration;
-      register: result
-      failed_when: result.rc >= 1
-
-    - name: Verify that the services are running on the overcloud
-      shell: |
-        source ~/overcloudrc;
-        sudo podman ps --filter=name='heat|gnocchi|ceilometer|aodh';
-      register: result
-      failed_when: result.rc >= 1
-
-    - name: Verify that the time-series database service is available
-      shell: |
-        source ~/overcloudrc;
-        {{ openstack_cmd }} metric status --fit-width;
-      register: result
-      failed_when: result.rc >= 1
+    - import_role:
+        name: '../roles/telemetry_autoscaling'
+        tasks_from: verify_autoscaling
 ...

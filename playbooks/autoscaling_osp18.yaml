@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  become: no
+  name: Run the autoscaling tests
+  vars:
+    openstack_cmd: "oc rsh openstackclient openstack"
+    metrics_backend: "prometheus"
+
+  tasks:
+    - import_role:
+        name: '../roles/telemetry_autoscaling'
+
