@@ -1,6 +1,6 @@
 ---
 - name: Create the stack
-  shell: |
+  ansible.builtin.shell: |
     #source ~/overcloudrc;
     {{ openstack_cmd }} stack create \
     -t $HOME/templates/autoscaling/vnf/template.yaml \
@@ -10,18 +10,18 @@
   failed_when: result.rc >= 1
 
 - name: Wait for 60 sec
-  pause:
+  ansible.builtin.pause:
     minutes: 1
 
 - name: Verify that the stack was created successfully
-  shell: |
+  ansible.builtin.shell: |
     # source ~/overcloudrc;
     {{ openstack_cmd }} stack show {{ stack_name }} -c id -c stack_status;
   register: result
   failed_when: '"CREATE_COMPLETE" not in result.stdout'
 
 - name: Verify that the stack resources are created
-  shell: |
+  ansible.builtin.shell: |
     # source ~/overcloudrc;
     export STACK_ID=$({{ openstack_cmd }} stack show {{ stack_name }} -c id -f value);
     {{ openstack_cmd }} stack resource list $STACK_ID;
@@ -29,7 +29,7 @@
   failed_when: '"CREATE_COMPLETE" not in result.stdout'
 
 - name: Verify that an instance was launched by the stack creation
-  shell: |
+  ansible.builtin.shell: |
     # source ~/overcloudrc;
     export STACK_ID=$({{ openstack_cmd }} stack show {{ stack_name }} -c id -f value);
     {{ openstack_cmd }} server list --long | grep $STACK_ID;
@@ -37,44 +37,44 @@
   failed_when: result.rc >= 1
 
 - name: Verify that the alarms were created for the stack
-  shell: |
+  ansible.builtin.shell: |
     # source ~/overcloudrc;
     {{ openstack_cmd }} alarm list
   register: result
   failed_when: result.rc >= 1
 
 - name: Note the physical_resource_id values for the cpu_alarm_low resource
-  shell: |
+  ansible.builtin.shell: |
     # source ~/overcloudrc;
     export STACK_ID=$({{ openstack_cmd }} stack show {{ stack_name }} -c id -f value);
     {{ openstack_cmd }} stack resource list $STACK_ID |grep -i cpu_alarm_low | awk '{print $4}'
   register: physical_resource_id_low
 
 - name: Note the physical_resource_id values for the cpu_alarm_high resource
-  shell: |
+  ansible.builtin.shell: |
     # source ~/overcloudrc;
     export STACK_ID=$({{ openstack_cmd }} stack show {{ stack_name }} -c id -f value);
     {{ openstack_cmd }} stack resource list $STACK_ID |grep -i cpu_alarm_high | awk '{print $4}'
   register: physical_resource_id_high
 
 - name: Verify physical_resource_id match the alarm id for cpu_alarm_low
-  shell: |
+  ansible.builtin.shell: |
     # source ~/overcloudrc;
     {{ openstack_cmd }} alarm list |grep -i cpu_alarm_low | awk '{print $2}'
   register: alarm_id_low
-  failed_when: 
+  failed_when:
     - physical_resource_id_low.stdout != alarm_id_low.stdout
 
 - name: Verify physical_resource_id match the alarm id for cpu_alarm_high
-  shell: |
+  ansible.builtin.shell: |
     # source ~/overcloudrc;
     {{ openstack_cmd }} alarm list |grep -i cpu_alarm_high | awk '{print $2}'
   register: alarm_id_high
-  failed_when: 
+  failed_when:
     - physical_resource_id_high.stdout != alarm_id_high.stdout
 
 - name: Verify that metric resources exist for the stack
-  shell: |
+  ansible.builtin.shell: |
     # source ~/overcloudrc;
     export STACK_ID=$({{ openstack_cmd }} stack show {{ stack_name }} -c id -f value);
     {{ openstack_cmd }} metric resource search \
