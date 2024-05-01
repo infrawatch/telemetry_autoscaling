@@ -1,11 +1,7 @@
 ---
-- set_fact:
-    metrics_backend: "gnocchi"
-  when: not (metrics_backend is defined)
-
 - name: Create the generic archive policy for autoscaling
   when: metrics_backend == "gnocchi"
-  shell: |
+  ansible.builtin.shell: |
     # source ~/overcloudrc;
     {{ openstack_cmd }} metric archive-policy create generic \
     --back-window 0 \
@@ -17,18 +13,18 @@
 
 - name: Verify that the archive policy was created
   when: metrics_backend == "gnocchi"
-  shell: |
+  ansible.builtin.shell: |
     # source ~/overcloudrc;
     {{ openstack_cmd }} metric archive-policy show generic;
   register: result
   failed_when: result.rc >= 1
 
 - name: Create "vnf" directory under templates
-  shell: |
+  ansible.builtin.shell: |
     mkdir -p $HOME/templates/autoscaling/vnf/
 
 - name: Configure heat template for automatically scaling instances
-  copy:
+  ansible.builtin.copy:
     dest: ~/templates/autoscaling/vnf/instance.yaml
     content: |
       heat_template_version: wallaby
@@ -88,14 +84,14 @@
             port_id: { get_resource: port }
 
 - name: Create the resource to reference in the heat template
-  copy:
+  ansible.builtin.copy:
     dest: ~/templates/autoscaling/vnf/resources.yaml
     content: |
       resource_registry:
         "OS::Nova::Server::VNF": /home/stack/templates/autoscaling/vnf/instance.yaml
 
 - name: Create the deployment template for heat to control instance scaling
-  copy:
+  ansible.builtin.copy:
     dest: ~/templates/autoscaling/vnf/template.yaml
     content: |
       heat_template_version: wallaby
