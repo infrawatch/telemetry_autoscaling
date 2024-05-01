@@ -6,7 +6,6 @@
 - hosts: undercloud
   become: no
   name: Verifying the overcloud deployment for autoscaling
-  vars:
   tasks:
     - import_role:
         name: '../roles/telemetry_autoscaling'

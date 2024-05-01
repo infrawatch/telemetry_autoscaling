@@ -6,7 +6,6 @@
 - hosts: undercloud
   become: no
   name: Creating the stack deployment for autoscaling
-  vars:
   tasks:
     - include_role:
         name: '../roles/telemetry_autoscaling'
