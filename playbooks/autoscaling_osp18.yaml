@@ -2,11 +2,36 @@
 - hosts: localhost
   become: no
   name: Run the autoscaling tests
+  # NOTE: These vars should be eventually moved into a vars file.
   vars:
     openstack_cmd: "oc rsh openstackclient openstack"
     metrics_backend: "prometheus"
-
+    stack_image: "cirros"
+    stack_flavor: "m1.small"
+    stack_network: "private"
+    stack_external_network: "public"
   tasks:
+    # NOTE: the tags are for testing/development, eventually, the role will just be imported, and main.yml will run through the tasks
+    - import_role:
+        name: '../name/telemetry_autoscaling'
+        tasks_from: 'verify_autoscaling'
+      tags:
+        - precheck 
     - import_role:
         name: '../roles/telemetry_autoscaling'
+        tasks_from: configure_heat
+          #tasks_from: creating_stack
+      tags:
+        - create
 
+    - import_role:
+        name: '../roles/telemetry_autoscaling'
+        tasks_from: creating_stack
+      tags:
+        - create
+
+    - import_role:
+        name: '../roles/telemetry_autoscaling'
+        tasks_from: test_autoscaling
+      tags:
+        - test

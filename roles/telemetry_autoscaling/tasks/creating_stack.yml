@@ -1,10 +1,33 @@
 ---
+- name: Copy the templates to openstackclient pod
+  ansible.builtin.shell: |
+    oc cp $HOME/templates/autoscaling/vnf/template.yaml openstackclient:/tmp
+    oc cp $HOME/templates/autoscaling/vnf/resources.yaml openstackclient:/tmp
+    oc cp $HOME/templates/autoscaling/vnf/instance.yaml openstackclient:/tmp
+
+  # template location was $HOME/templates/autoscaling/vnf/
+- name: "[temp] Set the location to copy the template to"
+  ansible.builtin.set_fact:
+    template_location: '/tmp'
+
+  # I need to pass parameters to the stack create
+  # TODO: Define parameters as vars, and add them to the role.
+  # TODO: Update pre-checks to make sure the image, flavor, key, network and external_network exist.
+  # Temperority use the install_yamls/devinstall make edpm_deploy_instance to make these resources.
+  # This maketarget uses the devsetup/scripts/edpm-deploy-instance.sh script
+  # TODO: Either update the test to create the required resources, or add checks to make sure they exist.
+- ansible.builtin.set_fact:
+    stack_image: cirros
+    stack_flavor: m1.small
+    #stack_keyname:
+    stack_network: private
+    stack_external_network: public
 - name: Create the stack
   ansible.builtin.shell: |
     #source ~/overcloudrc;
     {{ openstack_cmd }} stack create \
-    -t $HOME/templates/autoscaling/vnf/template.yaml \
-    -e $HOME/templates/autoscaling/vnf/resources.yaml \
+    -t {{ template_location }}/template.yaml \
+    -e {{ template_location }}/resources.yaml \
     {{ stack_name }};
   register: result
   failed_when: result.rc >= 1
@@ -73,7 +96,9 @@
   failed_when:
     - physical_resource_id_high.stdout != alarm_id_high.stdout
 
+  # TODO: get alt check for prom
 - name: Verify that metric resources exist for the stack
+  when: metrics_backend == "gnocchi"
   ansible.builtin.shell: |
     # source ~/overcloudrc;
     export STACK_ID=$({{ openstack_cmd }} stack show {{ stack_name }} -c id -f value);
