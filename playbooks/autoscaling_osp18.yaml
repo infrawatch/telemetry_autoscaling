@@ -11,6 +11,13 @@
     stack_network: "private"
     stack_external_network: "public"
   tasks:
+      # this is temperory and should be replaced later by some heat stack or some ansible
+    - community.general.make:
+        chdir: "{{ ansible_env.HOME }}/install_yamls/devsetup"
+        target: edpm_deploy_instance
+      tags:
+        - setup
+
     # NOTE: the tags are for testing/development, eventually, the role will just be imported, and main.yml will run through the tasks
     - import_role:
         name: '../roles/telemetry_autoscaling'

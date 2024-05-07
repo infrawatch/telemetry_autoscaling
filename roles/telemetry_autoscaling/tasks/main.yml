@@ -1,5 +1,7 @@
 ---
 # tasks file for telemetry_autoscaling
+  # TODO: Update the pre-checks to include the resources that the stack expects to exist
+  # i.e. networks, flavor, image, security group
 - name: Check pre-reqs for autoscaling
   ansible.builtin.include_tasks: verify_autoscaling.yml
 
