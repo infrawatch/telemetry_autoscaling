@@ -12,8 +12,13 @@
     stack_external_network: "public"
   tasks:
       # this is temperory and should be replaced later by some heat stack or some ansible
+    - ansible.builtin.command:
+        cmd: git clone http://github.com/openstack-k8s-operators/install_yamls
+        chdir: "{{ playbook_dir }}"
+      tags:
+        - setup
     - community.general.make:
-        chdir: "{{ ansible_env.HOME }}/install_yamls/devsetup"
+        chdir: "{{ playbook_dir }}/install_yamls/devsetup"
         target: edpm_deploy_instance
       tags:
         - setup
