@@ -26,12 +26,31 @@
     {{ openstack_cmd }} server list --long | grep -i 'metering.server_group' | wc -l
   register: instance_count1
 
+- shell: |
+    cat {{ ansible_env.HOME }}/.ssh/known_hosts | grep "{{ item | trim }}"
+  with_items: "{{ vnf_instance_ip.stdout_lines }}"
+  ignore_errors: true
+
+- name: Remove the existing hostkey, if there is one for the target IP
+  ansible.builtin.lineinfile:
+    dest: '{{ ansible_env.HOME }}/.ssh/known_hosts'
+    state: absent
+    regexp: "{{ item |trim }}"
+  with_items: "{{ vnf_instance_ip.stdout_lines }}"
+
+- shell: |
+    cat {{ ansible_env.HOME }}/.ssh/known_hosts | grep "{{ item | trim }}"
+  with_items: "{{ vnf_instance_ip.stdout_lines }}"
+  ignore_errors: true
+
   # NOTE: Disabling strict host key checking so that ssh doesn't give an error
   # when the host key changes i.e. if a new VM has been assigned a
   # previously-used IP address, which will happen during local testing but not
   # in CI
   # NOTE: the with_items is because I was capturing both IPs initially, and
   # using both in case the order was not consistent.
+  # Disabling hostkey checking didn't work. I need to remove the key from the known_hosts file before trying to tun this.
+  # The key removal should move to some pre/pre-run stage.
 - name: Test automatic scaling up of instances
   ansible.builtin.shell: |
     sshpass -p gocubsgo ssh -o StrictHostKeyChecking=False cirros@{{ item | trim }} "sudo yes > /dev/null &"
