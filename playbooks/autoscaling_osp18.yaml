@@ -17,9 +17,37 @@
         chdir: "{{ playbook_dir }}"
       tags:
         - setup
+
     - community.general.make:
         chdir: "{{ playbook_dir }}/install_yamls/devsetup"
         target: edpm_deploy_instance
+      tags:
+        - setup
+
+    - name: Patch the openstackversions to use the master containers for aodh and heat
+      ansible.builtin.shell:
+        cmd: |
+          oc patch openstackversions openstack-galera-network-isolation --type merge --patch-file patch.yaml
+      tags:
+        - setup
+
+    - name: patch observabilityclient into openstackclient
+      shell:
+        cmd: |
+          oc exec openstackclient -- python3 -m ensurepip --upgrade
+          oc exec openstackclient -- python3 -m pip install --upgrade aodhclient
+          oc exec openstackclient -- python3 -m pip install python-observabilityclient
+      tags:
+        - setup
+
+    - name: Wait until the oscp is resolved the changes to continue
+      ansible.builtin.shell:
+        cmd: |
+          oc get oscp | grep "Setup complete"
+      retries: 24
+      timeout: 5
+      until: output.stdout_lines | length == 1
+      register: output
       tags:
         - setup
 
