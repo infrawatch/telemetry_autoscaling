@@ -1,0 +1,73 @@
+#!/usr/bin/env ansible-playbook
+---
+# Pre-config steps to setup autoscaling for OSP18
+
+- hosts: localhost
+  become: no
+  name: Pre-config steps for Autoscaling on OSP18
+  
+  tasks:
+    - name: Install openstackclient dependencies
+      shell:
+        cmd: |
+          oc exec -ti openstackclient -- python3 -m ensurepip --upgrade
+          oc exec -ti openstackclient -- python3 -m pip install --upgrade aodhclient
+          oc exec -ti openstackclient -- python3 -m pip install python-observabilityclient
+
+    - name: Install Cluster Observability Operator(COO)
+      ansible.builtin.shell:
+        cmd: |
+          oc create -f - <<EOF
+          apiVersion: operators.coreos.com/v1alpha1
+          kind: Subscription
+            name: cluster-observability-operator
+            namespace: openshift-operators
+          spec:
+            channel: development
+            installPlanApproval: Automatic
+            name: cluster-observability-operator
+            source: redhat-operators
+            sourceNamespace: openshift-marketplace
+          EOF
+      changed_when: false
+      register: result
+      failed_when: result.rc >= 1
+
+    - name: Wait for the installation to succeed
+      pause:
+        minutes: 1
+
+    - name: Verify COO is installed successfully
+      ansible.builtin.command:
+        cmd: |
+          oc wait --for jsonpath="{.status.phase}"=Succeeded csv --namespace=openshift-operators -l operators.coreos.com/cluster-observability-operator.openshift-operators
+      register: result
+      changed_when: false
+      failed_when: '"condition met" not in result.stdout'
+
+    - name: Create a spec file
+      shell: |
+        mkdir -p $HOME/spec.yaml
+
+    - name: Add the content to the spec file
+      copy:
+        dest: $HOME/spec.yaml
+        content: |
+          spec:
+            customContainerImages:
+              aodhAPIImage: quay.io/podified-master-centos9/openstack-aodh-api:current-podified
+              aodhEvaluatorImage: quay.io/podified-master-centos9/openstack-aodh-evaluator:current-podified
+              aodhListenerImage: quay.io/podified-master-centos9/openstack-aodh-listener:current-podified
+              aodhNotifierImage: quay.io/podified-master-centos9/openstack-aodh-notifier:current-podified
+              heatAPIImage: quay.io/podified-master-centos9/openstack-heat-api:current-podified
+              heatCfnapiImage: quay.io/podified-master-centos9/openstack-heat-api-cfn:current-podified
+              heatEngineImage: quay.io/podified-master-centos9/openstack-heat-engine:current-podified
+
+    - name: Update the openstackversions CR to run master images for aodh and heat
+      ansible.builtin.shell:
+        cmd: |
+          oc patch openstackversions openstack-galera-network-isolation --type merge --patch-file $HOME/spec.yaml
+      register: result
+      failed_when: result.rc >= 1
+
+...
