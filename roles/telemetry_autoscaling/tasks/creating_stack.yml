@@ -32,16 +32,18 @@
   register: result
   failed_when: result.rc >= 1
 
-- name: Wait for 60 sec
-  ansible.builtin.pause:
-    minutes: 1
+    #- name: Wait for 60 sec
+    #  ansible.builtin.pause:
+    #    minutes: 1
 
 - name: Verify that the stack was created successfully
   ansible.builtin.shell: |
     # source ~/overcloudrc;
     {{ openstack_cmd }} stack show {{ stack_name }} -c id -c stack_status;
   register: result
-  failed_when: '"CREATE_COMPLETE" not in result.stdout'
+  until: '"CREATE_COMPLETE" in result.stdout'
+  timeout: 30
+  retries: 20
 
 - name: Verify that the stack resources are created
   ansible.builtin.shell: |
@@ -49,7 +51,10 @@
     export STACK_ID=$({{ openstack_cmd }} stack show {{ stack_name }} -c id -f value);
     {{ openstack_cmd }} stack resource list $STACK_ID;
   register: result
-  failed_when: '"CREATE_COMPLETE" not in result.stdout'
+  timeout: 30
+  retries: 20
+  until: '"CREATE_COMPLETE" in result.stdout'
+    #  failed_when: '"CREATE_COMPLETE" not in result.stdout'
 
 - name: Verify that an instance was launched by the stack creation
   ansible.builtin.shell: |
