@@ -22,6 +22,7 @@
     #stack_keyname:
     stack_network: private
     stack_external_network: public
+    
 - name: Create the stack
   ansible.builtin.shell: |
     #source ~/overcloudrc;
@@ -32,9 +33,18 @@
   register: result
   failed_when: result.rc >= 1
 
-    #- name: Wait for 60 sec
-    #  ansible.builtin.pause:
-    #    minutes: 1
+- name: Debug that the stack resources
+  block:    
+    - name: Verify that the alarms were created for the stack
+      ansible.builtin.shell: |
+        {{ openstack_cmd }} alarm list
+      register: result
+      failed_when: result.rc >= 1
+
+    - name: Verify that the stack resources are created
+      ansible.builtin.shell: |
+        export STACK_ID=$({{ openstack_cmd }} stack show {{ stack_name }} -c id -f value);
+        {{ openstack_cmd }} stack resource list $STACK_ID;
 
 - name: Verify that the stack was created successfully
   ansible.builtin.shell: |
