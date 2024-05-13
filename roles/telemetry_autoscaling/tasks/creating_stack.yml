@@ -36,8 +36,12 @@
     #  ansible.builtin.pause:
     #    minutes: 1
 - name: Debug that the stack resources
-  block:    
-    - name: Verify that the alarms were created for the stack
+  block:  
+    - name: Wait for 60 sec
+      ansible.builtin.pause:
+        minutes: 1  
+
+    - name: show that the alarms created for the stack
       ansible.builtin.shell: |
         {{ openstack_cmd }} alarm list
       register: result
@@ -47,6 +51,15 @@
       ansible.builtin.shell: |
         export STACK_ID=$({{ openstack_cmd }} stack show {{ stack_name }} -c id -f value);
         {{ openstack_cmd }} stack resource list $STACK_ID;
+    
+    - name: Verify that the stack was created successfully
+      ansible.builtin.shell: |
+        # source ~/overcloudrc;
+        {{ openstack_cmd }} stack show {{ stack_name }};
+      register: result
+      until: '"CREATE_COMPLETE" in result.stdout'
+      timeout: 30
+      retries: 20
         
 - name: Verify that the stack was created successfully
   ansible.builtin.shell: |
