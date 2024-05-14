@@ -35,7 +35,7 @@
 - name: Print the result
   ansible.builtin.debug:
     var: result
-    
+
     #- name: Wait for 60 sec
     #  ansible.builtin.pause:
     #    minutes: 1
@@ -59,6 +59,17 @@
   retries: 20
   until: '"CREATE_COMPLETE" in result.stdout'
     #  failed_when: '"CREATE_COMPLETE" not in result.stdout'
+    
+- name: Verify that ceilometer_cpu metric exist 
+  ansible.builtin.shell: |
+    # source ~/overcloudrc;
+    {{ openstack_cmd }} metric list
+  register: result
+  failed_when: result.rc >= 1
+
+- name: Print the result
+  ansible.builtin.debug:
+    var: result
 
 - name: Verify that an instance was launched by the stack creation
   ansible.builtin.shell: |
