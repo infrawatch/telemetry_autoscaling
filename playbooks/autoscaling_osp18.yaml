@@ -12,9 +12,25 @@
     stack_external_network: "public"
   tasks:
       # this is temperory and should be replaced later by some heat stack or some ansible
+
+    - set_fact:
+        fvt_dir: "{{ playbook_dir }}/feature-verification-tests"
+      when: "{{ not fvt_dir is defined }}"
+      tags:
+        always
+
+    - debug: var=fvt_dir
+
+    - command:
+        cmd: git clone http://github.com/infrawatch/feature-verification-tests -b efoley-add_telemetry_autoscaling {{ fvt_dir }}
+        creates: "{{ fvt_dir }}"
+      tags:
+        - setup
+
     - ansible.builtin.command:
         cmd: git clone http://github.com/openstack-k8s-operators/install_yamls
         chdir: "{{ playbook_dir }}"
+        creates: "{{ playbook_dir }}/install_yamls"
       tags:
         - setup
 
@@ -53,25 +69,25 @@
 
     # NOTE: the tags are for testing/development, eventually, the role will just be imported, and main.yml will run through the tasks
     - import_role:
-        name: '../roles/telemetry_autoscaling'
+        name: '{{ fvt_dir }}roles/telemetry_autoscaling'
         tasks_from: 'verify_autoscaling'
       tags:
         - precheck 
     - import_role:
-        name: '../roles/telemetry_autoscaling'
+        name: '{{ fvt_dir }}/roles/telemetry_autoscaling'
         tasks_from: configure_heat
           #tasks_from: creating_stack
       tags:
         - create
 
     - import_role:
-        name: '../roles/telemetry_autoscaling'
+        name: '{{ fvt_dir }}/roles/telemetry_autoscaling'
         tasks_from: creating_stack
       tags:
         - create
 
     - import_role:
-        name: '../roles/telemetry_autoscaling'
+        name: '{{ fvt_dir }}/roles/telemetry_autoscaling'
         tasks_from: test_autoscaling
       tags:
         - test
