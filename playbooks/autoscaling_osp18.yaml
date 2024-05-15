@@ -10,22 +10,15 @@
     stack_flavor: "m1.small"
     stack_network: "private"
     stack_external_network: "public"
+     # this is temperory and should be replaced later by some heat stack or some ansible
+    fvt_dir: "{{ playbook_dir }}/feature-verification-tests"
   tasks:
-      # this is temperory and should be replaced later by some heat stack or some ansible
-
-    - set_fact:
-        fvt_dir: "{{ playbook_dir }}/feature-verification-tests"
-      when: "{{ not fvt_dir is defined }}"
-      tags:
-        always
-
-    - debug: var=fvt_dir
-
-    - command:
-        cmd: git clone http://github.com/infrawatch/feature-verification-tests -b efoley-add_telemetry_autoscaling {{ fvt_dir }}
-        creates: "{{ fvt_dir }}"
-      tags:
-        - setup
+     # this is temperory
+    - name: Clone feature-verification repository
+      git:
+        repo:  http://github.com/infrawatch/feature-verification-tests
+        dest: "{{ fvt_dir }}"
+        version: efoley-add_telemetry_autoscaling    
 
     - ansible.builtin.command:
         cmd: git clone http://github.com/openstack-k8s-operators/install_yamls
@@ -69,7 +62,7 @@
 
     # NOTE: the tags are for testing/development, eventually, the role will just be imported, and main.yml will run through the tasks
     - import_role:
-        name: '{{ fvt_dir }}roles/telemetry_autoscaling'
+        name: '{{ fvt_dir }}/roles/telemetry_autoscaling'
         tasks_from: 'verify_autoscaling'
       tags:
         - precheck 
