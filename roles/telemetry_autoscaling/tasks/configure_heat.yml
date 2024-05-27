@@ -11,7 +11,7 @@
   register: result
   failed_when: result.rc >= 1
 
-- name: Verify that the archive policy was created
+- name: RHOSO-12656 Verify that the archive policy was created
   when: metrics_backend == "gnocchi"
   ansible.builtin.shell: |
     # source ~/overcloudrc;
@@ -23,7 +23,7 @@
   ansible.builtin.shell: |
     mkdir -p $HOME/templates/autoscaling/vnf/
 
-- name: Configure heat template for automatically scaling instances
+- name: RHOSO-12657 Configure heat template for automatically scaling instances
   ansible.builtin.copy:
     dest: ~/templates/autoscaling/vnf/instance.yaml
     content: |
@@ -83,14 +83,14 @@
             floatingip_id: { get_resource: floating_ip }
             port_id: { get_resource: port }
 
-- name: Create the resource to reference in the heat template
+- name: RHOSO-12658 Create the resource to reference in the heat template
   ansible.builtin.copy:
     dest: ~/templates/autoscaling/vnf/resources.yaml
     content: |
       resource_registry:
         "OS::Nova::Server::VNF": /home/stack/templates/autoscaling/vnf/instance.yaml
 
-- name: Create the deployment template for heat to control instance scaling
+- name: RHOSO-12659 Create the deployment template for heat to control instance scaling
   ansible.builtin.copy:
     dest: ~/templates/autoscaling/vnf/template.yaml
     content: |
