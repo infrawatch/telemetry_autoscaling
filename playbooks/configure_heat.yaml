@@ -5,7 +5,7 @@
 
 - hosts: undercloud
   become: no
-  name: Using the heat service for autoscaling
+  name: RHELOSP-178983 Using the heat service for autoscaling
   tasks:
 
     - name: Create the generic archive policy for autoscaling
