@@ -5,7 +5,7 @@
 
 - hosts: undercloud
   become: no
-  name: Verifying the overcloud deployment for autoscaling
+  name: RHELOSP-178984 Verifying the overcloud deployment for autoscaling
   tasks:
 
     - name: test service API endpoint(metric) for autoscaling
