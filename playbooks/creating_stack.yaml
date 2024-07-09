@@ -5,7 +5,7 @@
 
 - hosts: undercloud
   become: no
-  name: Creating the stack deployment for autoscaling
+  name: RHELOSP-178985 Creating the stack deployment for autoscaling
   tasks:
 
     - name: Create the stack
