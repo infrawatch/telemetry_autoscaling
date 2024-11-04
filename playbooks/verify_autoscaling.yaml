@@ -42,4 +42,17 @@
         openstack metric status --fit-width;
       register: result
       failed_when: result.rc >= 1
+
+    - name: Check if flavor "small" exists
+      shell: |
+        openstack flavor list -f value -c Name | grep '^small$'
+      register: flavor_check
+      failed_when: false  # Allow task to continue even if the flavor doesn't exist
+
+
+    - name: Create "small" flavor if not exists
+      shell: |
+        openstack flavor create --ram 512 --vcpus 1 --disk 1 small
+      when: flavor_check.stdout == ""
+      register: flavor_creation
 ...

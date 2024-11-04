@@ -47,7 +47,7 @@
             flavor:
               type: string
               description: instance flavor to be used
-              default: workload_flavor_1
+              default: small
             key_name:
               type: string
               description: keypair to be used
