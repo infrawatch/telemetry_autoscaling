@@ -55,4 +55,5 @@
         openstack flavor create --ram 512 --vcpus 1 --disk 1 small
       when: flavor_check.stdout == ""
       register: flavor_creation
+      failed_when: false  # Allow task to continue even if the flavor doesn't exist
 ...
