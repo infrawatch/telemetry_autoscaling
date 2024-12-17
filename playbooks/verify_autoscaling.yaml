@@ -45,15 +45,16 @@
 
     - name: Check if flavor "small" exists
       shell: |
-        openstack flavor list -f value -c Name | grep '^small$'
+        source ~/overcloudrc;
+        openstack flavor list
       register: flavor_check
       failed_when: false  # Allow task to continue even if the flavor doesn't exist
 
 
     - name: Create "small" flavor if not exists
       shell: |
-        openstack flavor create --ram 512 --vcpus 1 --disk 1 small
-      when: flavor_check.stdout == ""
+        source ~/overcloudrc;
+        openstack flavor create --ram 512 --vcpus 1 --disk 1 small;
       register: flavor_creation
       failed_when: false  # Allow task to continue even if the flavor doesn't exist
 ...
