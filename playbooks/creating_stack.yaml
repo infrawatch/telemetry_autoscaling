@@ -29,6 +29,14 @@
       register: result
       failed_when: '"CREATE_COMPLETE" not in result.stdout'
 
+      # Debug Task can be removed later
+    - name: Verify that the stack events
+      shell: |
+        source ~/overcloudrc
+        openstack stack event list vnf
+      register: event_result
+      failed_when: false  # Allow task to continue even if this failed
+
     - name: Verify that the stack resources are created
       shell: |
         source ~/overcloudrc;
